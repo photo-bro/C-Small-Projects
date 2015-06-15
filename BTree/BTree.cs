@@ -46,18 +46,20 @@ namespace BTreeNamespace
 
 		public BNodeType Type {
 			get { return m_Type; }
+			set { m_Type = value; }
 		}
 
 		public int NumKeys {
 			get { return m_Keys.Count; }
 		}
-
-		public BNode<T> ChildAt (int index)
-		{
-			return  m_Children [index];
+			
+		// Getter/Setter for child nodes of node
+		public List<BNode<T>> ChildNodes {
+			get { return m_Children [index]; }
+			set { m_Children [index] = value; }
 		}
 
-
+		// Getter/Setter for keys in node
 		// Returns null if index > number of keys
 		public T this [int index] {
 			get { 
@@ -68,11 +70,12 @@ namespace BTreeNamespace
 					return default(T);		// item out of range return null
 			}
 			set {
-				// Add key
-				m_Keys.Insert(index, value);
+				// Insert key
+				m_Keys.Insert (index, value);
 			}
 		}
-	} // BNode class
+	}
+	// BNode class
 		
 	class BTree<T>
 	{
@@ -106,8 +109,10 @@ namespace BTreeNamespace
 				// Create new root node
 				BNode<T> s = new BNode<T> (BNodeType.INTERNAL);
 				m_Root = s;
+				// Set as internal node
+				s.Type = BNodeType.INTERNAL;
 				// Make old root child of new root
-				s.ChildAt(i) = r;
+				s.ChildNodes [i] = r;
 				// Split child to make room for new key
 				_SplitChild (ref s, 1, ref r);
 				// Insert new key
@@ -126,7 +131,7 @@ namespace BTreeNamespace
 			// Check if node is leaf or internal
 			// is Leaf
 			if (node.Type == BNodeType.LEAF) {
-				while (i >= 1 &&  key < node [i]) {
+				while (i >= 1 && key < node [i]) {
 					node [i + 1] = node [i];
 					--i;
 				}
@@ -139,15 +144,15 @@ namespace BTreeNamespace
 				while (i >= 1 && key < node [i])
 					--i;
 				// Check if child can have another node
-				if (node.ChildAt (i).NumKeys == (2 * m_Degree - 1)) {
+				if (node.ChildNodes [i].NumKeys == (2 * m_Degree - 1)) {
 					// Split child
-					_SplitChild (ref node, i, ref node.ChildAt (i));
+					_SplitChild (ref node, i, ref node.ChildNodes [i]);
 					// Point to next key in current node
 					if (key > node [i])
 						++i;
 				}
 				// Recursive call insert key into child node
-				_InsertNonFull (ref node.ChildAt (i), key);
+				_InsertNonFull (ref node.ChildNodes [i], key);
 			}
 		}
 
@@ -161,20 +166,22 @@ namespace BTreeNamespace
 			// If child is not a leaf then copy children to new node
 			if (z.Type != BNodeType.LEAF)
 				for (int j = 1; j < m_Degree; ++j)
-					z.ChildAt (j) = child.ChildAt (j + 1);
+					z.ChildNodes [j] = child.ChildNodes [j + 1];
 			// Make room for new child
 			for (int j = node.NumKeys + 1; j > childNum + 1; --j)
-				z.ChildAt (j + 1) = node.ChildAt (j);
+				z.ChildAt (j + 1) = node.ChildNodes [j];
 			// Make new child
-			node.ChildAt(childNum + 1) = z;
+			node.ChildNodes [childNum + 1] = z;
 			// Shift keys in node
 			for (int j = node.NumKeys; j > childNum; --j)
 				node [j + 1] = node [j];
 			// Insert median key
-			node[childNum] = child[childNum];
+			node [childNum] = child [childNum];
 		}
-	} // BTree class
-} // BTreeNamespace
+	}
+	// BTree class
+}
+// BTreeNamespace
 
 class Program
 {
